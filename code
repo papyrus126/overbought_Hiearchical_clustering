@@ -1,0 +1,109 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Apr 24 22:59:53 2023
+
+@author: Chia-Liang
+"""
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+from pylab import mpl #從pylab 匯入mpl
+import scipy.cluster.hierarchy as sch
+#上述兩者都可作為階層式集群分析的套件
+#請把以下段落經常寫在處理中文的文字與數字處理的程式裡
+#以mpl裡的rcParams(runtime configuration))來指定預設字型:
+#在APPLE MacOS的中文顯示之設定, 同樣以mpl裡的rcParams來指定預設字型 
+#mpl.rcParams['font.sans-serif'] = ['Arial Unicode MS']   
+mpl.rcParams['font.sans-serif'] = ['Microsoft YaHei']   
+#解決plot不能顯示中文問題 
+mpl.rcParams['axes.unicode_minus'] = False 
+# 以mpl裡的rcParams,來解決儲存影象是負號'-',卻顯示為方塊的問題
+mpl.rc('axes',axisbelow=True)    #使網格線於圖層之下層
+# read the overbought.csv file 
+overbought_data = pd.read_csv('/Users/88693/Desktop/財經大數據 APP/overbought.csv',encoding='utf8')
+overbought_data.info()
+overbought_data.head()
+overbought_data.set_index('公司名',inplace=True)
+
+overbought_data['產業別']=overbought_data['產業別'
+        ].apply(lambda x: 1 if x == 'TEC' else 0) # TRD=0, TEC=1
+overbought_data['趨勢股']=overbought_data['趨勢股'
+        ].apply(lambda x: 1 if x == 'Y' else 0) # N=0, Y=1
+normalized_overbought = (overbought_data - overbought_data.mean()) / overbought_data.std()
+normalized_overbought.head(15)
+
+normalized_overbought.describe() # all the same!
+
+dis=sch.linkage(normalized_overbought[['季EPS', '季每股營收', '單月營收成長率',
+                '季股東權益報酬率','20日均價', '30日均價','外資持股比','產業別','趨勢股']],
+                metric='euclidean',method='ward')
+# distance scale: ”euclidean”,”l1″,”l2″,”manhattan”,”cosine”...
+# method of computing distance: 
+# ”single”: Nearest Point Algorithm, for aggregating two clusters
+# “complete”: Farthest Point Algorithm
+# “average”, “weighted”, “centroid”: search a new center after agglomerating, 
+# “median”,  “ward”: minimization algorithm of variance of the assigned cluster
+cluster=sch.dendrogram(dis)
+# calculate the distance between groups along the agglomeratve process
+leave_value=cluster['leaves']
+leave_name=[]
+overbought_name=overbought_data.index
+for i in range(0,len(leave_value)):
+    name=overbought_name[leave_value[i]]
+    leave_name.append(name)
+cluster['ivl']=leave_name
+x=np.arange(0,21)
+plt.xticks(5+10*x,cluster['ivl'], rotation=90)
+plt.title('Hierarchical Clustering_Ward')
+plt.show()
+
+dis=sch.linkage(normalized_overbought[['季EPS', '季每股營收', '單月營收成長率',
+                '季股東權益報酬率','20日均價', '30日均價','外資持股比','產業別','趨勢股']],
+                metric='euclidean',method='single')
+cluster=sch.dendrogram(dis)
+leave_value=cluster['leaves']
+leave_name=[]
+overbought_name=overbought_data.index
+for i in range(0,len(leave_value)):
+    name=overbought_name[leave_value[i]]
+    leave_name.append(name)
+# calculate the distance between groups along the agglomeratve process
+cluster['ivl']=leave_name
+x=np.arange(0,21)
+plt.xticks(5+10*x,cluster['ivl'], rotation=90)
+plt.title('Hierarchical Clustering_single')
+plt.show()
+
+dis=sch.linkage(normalized_overbought[['季EPS', '季每股營收', '單月營收成長率',
+                '季股東權益報酬率','20日均價', '30日均價','外資持股比','產業別','趨勢股']],
+                metric='euclidean',method='complete')
+cluster=sch.dendrogram(dis)
+leave_value=cluster['leaves']
+leave_name=[]
+overbought_name=overbought_data.index
+for i in range(0,len(leave_value)):
+    name=overbought_name[leave_value[i]]
+    leave_name.append(name)
+plt.title('Hierarchical Clustering_complete')
+cluster['ivl']=leave_name
+x=np.arange(0,21)
+plt.xticks(5+10*x,cluster['ivl'], rotation=90)
+plt.show()
+
+dis=sch.linkage(normalized_overbought[['季EPS', '季每股營收', '單月營收成長率',
+                '季股東權益報酬率','20日均價', '30日均價','外資持股比','產業別','趨勢股']],
+                metric='euclidean',method='average')
+cluster=sch.dendrogram(dis)
+leave_value=cluster['leaves']
+leave_name=[]
+overbought_name=overbought_data.index
+for i in range(0,len(leave_value)):
+    name=overbought_name[leave_value[i]]
+    leave_name.append(name)
+# calculate the distance between groups along the agglomeratve process
+cluster['ivl']=leave_name
+x=np.arange(0,21)
+plt.xticks(5+10*x,cluster['ivl'], rotation=90)
+plt.title('Hierarchical Clustering_average')
+plt.show() 
